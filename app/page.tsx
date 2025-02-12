@@ -4,7 +4,8 @@ import PriceView from "./components/price";
 import QuoteView from "./components/quote";
 import { useState } from "react";
 import { useAccount, useChainId } from "wagmi";
-import type { PriceResponse, Address } from "../src/utils/types";
+import type { PriceResponse } from "../src/utils/types";
+import { Address } from "viem";
 import ConnectWithUs from "./components/connect-with-us";
 
 function Page() {
@@ -27,7 +28,7 @@ function Page() {
         <div className="w-[480px] max-w-[85vw]">
           {finalize && price ? (
             <QuoteView
-              taker={address}
+              taker={address as Address}
               price={price}
               quote={quote}
               setQuote={setQuote}
