@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
   RainbowKitProvider,
   getDefaultWallets,
@@ -43,19 +44,23 @@ const customTheme = darkTheme({
   overlayBlur: "small",
 });
 
+const queryClient = new QueryClient()
+
 export function Providers({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
 
   return (
-    <WagmiConfig config={config}>
-      <RainbowKitProvider
-        appInfo={demoAppInfo}
-        theme={customTheme}
-        modalSize="compact"
-      >
-        {mounted && children}
-      </RainbowKitProvider>
-    </WagmiConfig>
+    <QueryClientProvider client={queryClient}>
+      <WagmiConfig config={config}>
+        <RainbowKitProvider
+          appInfo={demoAppInfo}
+          theme={customTheme}
+          modalSize="compact"
+        >
+          {mounted && children}
+        </RainbowKitProvider>
+      </WagmiConfig>
+    </QueryClientProvider>
   );
 }
