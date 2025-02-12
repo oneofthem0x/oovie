@@ -117,8 +117,14 @@ export async function fetchTokenList(): Promise<Token[]> {
     
     // Filter for Ethereum mainnet tokens and format them
     const mainnetTokens = data.tokens
-      .filter((token: any) => token.chainId === 1)
-      .map((token: any) => {
+      .filter((token: { chainId: number }) => token.chainId === 1)
+      .map((token: { 
+        name: string;
+        symbol: string;
+        decimals: number;
+        address: string;
+        logoURI?: string;
+      }) => {
         // Handle missing or invalid logoURI
         let logoURI = token.logoURI || '';
         if (logoURI && logoURI.includes('/thumb/')) {
