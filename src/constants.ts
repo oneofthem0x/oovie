@@ -142,11 +142,11 @@ export async function fetchTokenList(): Promise<Token[]> {
 
     // Filter out tokens that are already in popular tokens
     const nonPopularTokens = mainnetTokens.filter(
-      (token: { address: string }) => !popularTokenAddresses.has(token.address.toLowerCase())
+      (token: Token) => !popularTokenAddresses.has(token.address.toLowerCase())
     );
 
     // Update lookup objects with non-popular tokens
-    nonPopularTokens.forEach(token => {
+    nonPopularTokens.forEach((token: Token) => {
       MAINNET_TOKENS_BY_SYMBOL[token.symbol.toLowerCase()] = token;
       MAINNET_TOKENS_BY_ADDRESS[token.address.toLowerCase()] = token;
     });
