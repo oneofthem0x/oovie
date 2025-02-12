@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { formatUnits } from "ethers";
 import {
   useSignTypedData,
@@ -54,6 +54,7 @@ export default function QuoteView({
 
   // Add useRouter hook at the top of the component
   const router = useRouter();
+  const [error, setError] = useState<BaseError | null>(null);
 
   // Fetch quote data
   useEffect(() => {
@@ -89,7 +90,7 @@ export default function QuoteView({
   const {
     data: hash,
     isPending,
-    error,
+    error: transactionError,
     sendTransaction,
   } = useSendTransaction();
 
@@ -247,11 +248,11 @@ export default function QuoteView({
                 chainId: chainId,
               });
 
-            } catch (error) {
-              console.error("Transaction error:", error);
+            } catch (err) {
+              console.error("Transaction error:", err);
               
               // Check if the error is a user rejection
-              const errorMessage = (error as Error).message.toLowerCase();
+              const errorMessage = (err as Error).message.toLowerCase();
               if (
                 !errorMessage.includes('user rejected') && 
                 !errorMessage.includes('user denied') &&
@@ -259,11 +260,9 @@ export default function QuoteView({
               ) {
                 // Refresh the page for any error except user rejections
                 router.refresh();
-                // Or use window.location.reload() as an alternative
-                // window.location.reload();
               }
               
-              setError(error as BaseError);
+              setError(err as BaseError);
             }
           }}
         >
@@ -290,7 +289,7 @@ export default function QuoteView({
           )}
           {error && (
             <div className="text-red-500">
-              Error: {(error as BaseError).shortMessage || error.message}
+              Error: {error.shortMessage || error.message}
             </div>
           )}
         </div>
