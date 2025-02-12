@@ -1,3 +1,5 @@
+"use client";
+
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useEffect, useState } from "react";
 import { formatUnits, parseUnits } from "ethers";
@@ -7,6 +9,8 @@ import {
   useSimulateContract,
   useWriteContract,
   useWaitForTransactionReceipt,
+  useAccount,
+  useChainId,
 } from "wagmi";
 import { erc20Abi, Address } from "viem";
 import {
@@ -22,6 +26,11 @@ import Image from "next/image";
 import qs from "qs";
 import TokenSelector from "./token-selector";
 import { ArrowDown } from "lucide-react";
+import type { PriceResponse } from "../../src/utils/types";
+
+interface ErrorType {
+  reason: string;
+}
 
 export const DEFAULT_BUY_TOKEN = (chainId: number) => {
   if (chainId === 1) {
@@ -36,18 +45,18 @@ export default function PriceView({
   setFinalize,
   chainId,
 }: {
-  price: any;
-  taker: Address | undefined;
-  setPrice: (price: any) => void;
+  price: PriceResponse | undefined;
+  taker: string | undefined;
+  setPrice: (price: PriceResponse | undefined) => void;
   setFinalize: (finalize: boolean) => void;
   chainId: number;
 }) {
-  const [sellToken, setSellToken] = useState("weth");
-  const [buyToken, setBuyToken] = useState("usdc");
-  const [sellAmount, setSellAmount] = useState("");
+  const [sellToken, setSellToken] = useState<string>("WETH");
+  const [buyToken, setBuyToken] = useState<string>("USDC");
+  const [sellAmount, setSellAmount] = useState<string>("");
   const [buyAmount, setBuyAmount] = useState("");
   const [tradeDirection, setTradeDirection] = useState("sell");
-  const [error, setError] = useState([]);
+  const [error, setError] = useState<ErrorType[]>([]);
   const [showSellTokenSelector, setShowSellTokenSelector] = useState(false);
   const [showBuyTokenSelector, setShowBuyTokenSelector] = useState(false);
   const [buyTokenTax, setBuyTokenTax] = useState({
