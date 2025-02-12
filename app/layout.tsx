@@ -6,8 +6,8 @@ import Stars from "./components/stars";
 import Footer from "./components/footer";
 
 export const metadata = {
-  title: 'Oovo | Buy & Sell crypto with ease at crazy speeds. Multichain, fast like lightning.',
-  description: 'Oovo | Buy & Sell crypto with ease at crazy speeds. Multichain, fast like lightning.',
+  title: 'Oovo | Buy & Sell crypto with ease at crazy speeds. Fast like lightning.',
+  description: 'Oovo | Buy & Sell crypto with ease at crazy speeds. Fast like lightning.',
   icons: [
     {
       rel: 'icon',
