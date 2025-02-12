@@ -4,7 +4,7 @@ import PriceView from "./components/price";
 import QuoteView from "./components/quote";
 import { useState } from "react";
 import { useAccount, useChainId } from "wagmi";
-import type { PriceResponse } from "../src/utils/types";
+import type { PriceResponse, Address } from "../src/utils/types";
 import ConnectWithUs from "./components/connect-with-us";
 
 function Page() {
@@ -35,7 +35,7 @@ function Page() {
             />
           ) : (
             <PriceView
-              taker={address}
+              taker={address as Address}
               price={price}
               setPrice={setPrice}
               setFinalize={setFinalize}

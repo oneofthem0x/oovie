@@ -46,7 +46,7 @@ export default function PriceView({
   chainId,
 }: {
   price: PriceResponse | undefined;
-  taker: string | undefined;
+  taker: Address | undefined;
   setPrice: (price: PriceResponse | undefined) => void;
   setFinalize: (finalize: boolean) => void;
   chainId: number;
@@ -162,8 +162,8 @@ export default function PriceView({
 
   // Hook for fetching balance information for specified token for a specific taker address
   const { data, isError, isLoading } = useBalance({
-    address: taker,
-    token: sellTokenObject.address,
+    address: taker as Address,
+    token: sellTokenObject.address as Address,
   });
 
   console.log("taker sellToken balance: ", data);
