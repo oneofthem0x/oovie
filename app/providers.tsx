@@ -10,14 +10,14 @@ import {
 import { argentWallet, trustWallet, ledgerWallet } from "@rainbow-me/rainbowkit/wallets";
 import { configureChains, createConfig, WagmiConfig } from "wagmi";
 import { mainnet, polygon, optimism, arbitrum, base, zora } from "wagmi/chains";
-import { publicProvider } from "wagmi/providers/public";
+import { http } from "wagmi";
 
 const { chains, publicClient, webSocketPublicClient } = configureChains(
   [mainnet, polygon, optimism, arbitrum, base, zora],
-  [publicProvider()]
+  [http()]
 );
 
-const projectId = "YOUR_PROJECT_ID";
+const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "YOUR_PROJECT_ID";
 
 const { wallets } = getDefaultWallets({
   appName: "Oovo",
