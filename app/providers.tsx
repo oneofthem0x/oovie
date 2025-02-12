@@ -8,21 +8,27 @@ import {
   darkTheme,
 } from "@rainbow-me/rainbowkit";
 import { argentWallet, trustWallet, ledgerWallet } from "@rainbow-me/rainbowkit/wallets";
-import { configureChains, createConfig, WagmiConfig } from "wagmi";
+import { createConfig, WagmiConfig } from "wagmi";
 import { mainnet, polygon, optimism, arbitrum, base, zora } from "wagmi/chains";
-import { http } from "wagmi";
+import { http, createConfig as createWagmiConfig } from "wagmi";
 
-const { chains, publicClient, webSocketPublicClient } = configureChains(
-  [mainnet, polygon, optimism, arbitrum, base, zora],
-  [http()]
-);
+const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "a35a787688946b325afaa874271348d9";
 
-const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "YOUR_PROJECT_ID";
-
-const { wallets } = getDefaultWallets({
-  appName: "Oovo",
-  projectId,
-  chains,
+// ✅ Use the new `publicProvider()` method
+const config = createWagmiConfig({
+  transports: {
+    [mainnet.id]: http(),
+    [polygon.id]: http(),
+    [optimism.id]: http(),
+    [arbitrum.id]: http(),
+    [base.id]: http(),
+    [zora.id]: http(),
+  },
+  chains: [mainnet, polygon, optimism, arbitrum, base, zora],
+  connectors: getDefaultWallets({
+    appName: "Oovo",
+    projectId,
+  }).connectors,
 });
 
 const demoAppInfo = {
@@ -30,30 +36,26 @@ const demoAppInfo = {
 };
 
 const connectors = connectorsForWallets([
-  ...wallets,
+  ...getDefaultWallets({
+    appName: "Oovo",
+    projectId,
+  }).wallets,
   {
     groupName: "Other",
     wallets: [
-      argentWallet({ projectId, chains }),
-      trustWallet({ projectId, chains }),
-      ledgerWallet({ projectId, chains }),
+      argentWallet({ projectId }),
+      trustWallet({ projectId }),
+      ledgerWallet({ projectId }),
     ],
   },
 ]);
 
-const wagmiConfig = createConfig({
-  autoConnect: true,
-  connectors,
-  publicClient,
-  webSocketPublicClient,
-});
-
 const customTheme = darkTheme({
-  accentColor: '#10F0A3',
-  accentColorForeground: 'black',
-  borderRadius: 'large',
-  fontStack: 'system',
-  overlayBlur: 'small',
+  accentColor: "#10F0A3",
+  accentColorForeground: "black",
+  borderRadius: "large",
+  fontStack: "system",
+  overlayBlur: "small",
 });
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -61,9 +63,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   React.useEffect(() => setMounted(true), []);
 
   return (
-    <WagmiConfig config={wagmiConfig}>
+    <WagmiConfig config={config}>
       <RainbowKitProvider
-        chains={chains}
         appInfo={demoAppInfo}
         theme={customTheme}
         modalSize="compact"
