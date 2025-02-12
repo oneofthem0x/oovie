@@ -275,7 +275,7 @@ export default function PriceView({
 
         {/* Affiliate Fee Display */}
         <div className="text-slate-400">
-          {price && price.fees.integratorFee.amount
+          {price?.fees?.integratorFee?.amount
             ? "Affiliate Fee: " +
               Number(
                 formatUnits(
@@ -290,13 +290,13 @@ export default function PriceView({
 
         {/* Tax Information Display */}
         <div className="text-slate-400">
-          {buyTokenTax.buyTaxBps !== "0" && (
+          {buyTokenTax?.buyTaxBps !== "0" && (
             <p>
               {MAINNET_TOKENS_BY_SYMBOL[buyToken].symbol +
                 ` Buy Tax: ${formatTax(buyTokenTax.buyTaxBps)}%`}
             </p>
           )}
-          {sellTokenTax.sellTaxBps !== "0" && (
+          {sellTokenTax?.sellTaxBps !== "0" && (
             <p>
               {MAINNET_TOKENS_BY_SYMBOL[sellToken].symbol +
                 ` Sell Tax: ${formatTax(sellTokenTax.sellTaxBps)}%`}
