@@ -35,21 +35,6 @@ const demoAppInfo = {
   appName: "Oovo",
 };
 
-const connectors = connectorsForWallets([
-  ...getDefaultWallets({
-    appName: "Oovo",
-    projectId,
-  }).wallets,
-  {
-    groupName: "Other",
-    wallets: [
-      argentWallet({ projectId }),
-      trustWallet({ projectId }),
-      ledgerWallet({ projectId }),
-    ],
-  },
-]);
-
 const customTheme = darkTheme({
   accentColor: "#10F0A3",
   accentColorForeground: "black",
