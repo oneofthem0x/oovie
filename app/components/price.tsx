@@ -354,7 +354,7 @@ export default function PriceView({
               ? error[0].reason 
               : !sellAmount || sellAmount === "0"
                 ? "Enter an amount"
-                : "Review Trade"}
+                : "Approve"}
         </button>
       </div>
     </div>
