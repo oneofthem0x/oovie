@@ -50,7 +50,7 @@ function Page() {
         </div>
 
         <p className="text-[#5E5E5E] text-lg font-bold text-center max-w-[430px] mt-6">
-          Buy & Sell crypto with ease at crazy speeds. Fast like lightning.
+          Buy & Sell crypto on 16+ networks with ease at crazy speeds. Fast like lightning.
         </p>
       </div>
       <ConnectWithUs />

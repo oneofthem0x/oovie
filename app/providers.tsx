@@ -5,31 +5,78 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
   RainbowKitProvider,
   getDefaultWallets,
-  connectorsForWallets,
   darkTheme,
 } from "@rainbow-me/rainbowkit";
 import { argentWallet, trustWallet, ledgerWallet } from "@rainbow-me/rainbowkit/wallets";
-import { createConfig, WagmiConfig } from "wagmi";
-import { mainnet, polygon, optimism, arbitrum, base, zora } from "wagmi/chains";
-import { http, createConfig as createWagmiConfig } from "wagmi";
+import { createConfig, WagmiConfig } from 'wagmi';
+import { 
+  mainnet, 
+  polygon, 
+  optimism, 
+  arbitrum, 
+  base,
+  avalanche,
+  bsc,
+  zkSync,
+  mantle,
+  celo,
+  gnosis,
+  sepolia,
+  goerli,
+  polygonMumbai,
+  arbitrumGoerli,
+  baseGoerli
+} from 'wagmi/chains';
+import { http } from "wagmi";
 
 const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "a35a787688946b325afaa874271348d9";
 
-// ✅ Use the new `publicProvider()` method
-const config = createWagmiConfig({
+const chains = [
+  mainnet,
+  polygon,
+  optimism,
+  arbitrum,
+  base,
+  avalanche,
+  bsc,
+  zkSync,
+  mantle,
+  celo,
+  gnosis,
+  sepolia,
+  goerli,
+  polygonMumbai,
+  arbitrumGoerli,
+  baseGoerli
+];
+
+const { connectors } = getDefaultWallets({
+  appName: 'Oovo',
+  projectId,
+  chains,
+});
+
+const config = createConfig({
+  connectors,
   transports: {
     [mainnet.id]: http(),
     [polygon.id]: http(),
     [optimism.id]: http(),
     [arbitrum.id]: http(),
     [base.id]: http(),
-    [zora.id]: http(),
+    [avalanche.id]: http(),
+    [bsc.id]: http(),
+    [zkSync.id]: http(),
+    [mantle.id]: http(),
+    [celo.id]: http(),
+    [gnosis.id]: http(),
+    [sepolia.id]: http(),
+    [goerli.id]: http(),
+    [polygonMumbai.id]: http(),
+    [arbitrumGoerli.id]: http(),
+    [baseGoerli.id]: http()
   },
-  chains: [mainnet, polygon, optimism, arbitrum, base, zora],
-  connectors: getDefaultWallets({
-    appName: "Oovo",
-    projectId,
-  }).connectors,
+  chains
 });
 
 const demoAppInfo = {
@@ -57,6 +104,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           appInfo={demoAppInfo}
           theme={customTheme}
           modalSize="compact"
+          chains={chains}
         >
           {mounted && children}
         </RainbowKitProvider>
