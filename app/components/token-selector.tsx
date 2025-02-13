@@ -21,7 +21,7 @@ export default function TokenSelector({ isOpen, onClose, onSelectToken }: TokenS
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-[#191919] text-white border border-[#10F0A3] w-full max-w-md p-6">
+      <DialogContent className="bg-[#191919] text-white border border-gray-800 w-full max-w-md p-6">
         <DialogHeader>
           <DialogTitle>Select a Token</DialogTitle>
         </DialogHeader>
@@ -60,8 +60,12 @@ export default function TokenSelector({ isOpen, onClose, onSelectToken }: TokenS
         )}
 
         {/* Divider */}
-        {searchQuery.length === 0 && filteredTokens.length > 0 && (
-          <div className="my-4 border-t border-[#393939]" />
+        {searchQuery.length === 0 && (
+          <div className="my-4 flex items-center">
+            <div className="flex-grow border-t border-[#393939]"></div>
+            <span className="mx-4 text-sm text-gray-500">All tokens</span>
+            <div className="flex-grow border-t border-[#393939]"></div>
+          </div>
         )}
 
         {/* All Tokens Section */}
