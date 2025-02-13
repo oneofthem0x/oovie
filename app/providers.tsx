@@ -48,12 +48,11 @@ const chains = [
   polygonMumbai,
   arbitrumGoerli,
   baseGoerli
-];
+] as const;
 
 const { connectors } = getDefaultWallets({
   appName: 'Oovo',
   projectId,
-  chains,
 });
 
 const config = createConfig({
@@ -104,7 +103,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
           appInfo={demoAppInfo}
           theme={customTheme}
           modalSize="compact"
-          chains={chains}
         >
           {mounted && children}
         </RainbowKitProvider>
