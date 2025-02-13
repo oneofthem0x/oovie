@@ -7,7 +7,7 @@ export async function GET(request: Request) {
 
   try {
     const response = await fetch(
-      `https://api.0x.org/swap/v1/quote?${qs.stringify({
+      `https://api.0x.org/swap/v2/quote?${qs.stringify({
         // Required parameters
         sellToken: params.sellToken,
         buyToken: params.buyToken,
