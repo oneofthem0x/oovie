@@ -17,8 +17,6 @@ import {
   MAINNET_TOKENS,
   MAINNET_TOKENS_BY_SYMBOL,
   MAX_ALLOWANCE,
-  AFFILIATE_FEE,
-  FEE_RECIPIENT,
 } from "../../src/constants";
 import { permit2Abi } from "../../src/utils/permit2abi";
 import ZeroExLogo from "../../src/images/white-0x-logo.png";
@@ -94,7 +92,10 @@ export default function PriceView({
 
   const parsedSellAmount =
     sellAmount && tradeDirection === "sell"
-      ? parseUnits(sellAmount, sellTokenDecimals).toString()
+      ? parseUnits(
+          sellAmount.replace(/[^0-9.]/g, ''),
+          sellTokenDecimals
+        ).toString()
       : undefined;
 
   const parsedBuyAmount =
@@ -111,53 +112,77 @@ export default function PriceView({
 
   // Fetch price data and set the buyAmount whenever the sellAmount changes
   useEffect(() => {
+    if (!sellAmount || !sellTokenObject || !buyTokenObject) return;
+
     const params = {
       chainId: chainId,
       sellToken: sellTokenObject.address,
       buyToken: buyTokenObject.address,
-      sellAmount: parsedSellAmount,
-      buyAmount: parsedBuyAmount,
-      taker,
-      swapFeeRecipient: FEE_RECIPIENT,
-      swapFeeBps: AFFILIATE_FEE,
-      swapFeeToken: buyTokenObject.address,
-      tradeSurplusRecipient: FEE_RECIPIENT,
+      sellAmount: parsedSellAmount || "0",
+      takerAddress: taker as string,
+      skipValidation: false,
+      slippagePercentage: "0.01",
+      enableSlippageProtection: true,
+      buyTokenPercentageFee: "0",
+      feeRecipient: "0x0000000000000000000000000000000000000000"
     };
 
+    console.log('Fetching price with params:', params);
+
     async function main() {
-      const response = await fetch(`/api/price?${qs.stringify(params)}`);
-      const data = await response.json();
+      try {
+        const response = await fetch(`/api/price?${qs.stringify(params)}`);
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Price API error:", errorData);
+          setError([{ reason: errorData.reason || "Failed to fetch price" }]);
+          setPrice(undefined);
+          return;
+        }
 
-      if (data?.validationErrors?.length > 0) {
-        // error for sellAmount too low
-        setError(data.validationErrors);
-      } else {
-        setError([]);
-      }
-      if (data.buyAmount) {
-        setBuyAmount(formatUnits(data.buyAmount, buyTokenDecimals));
-        setPrice(data);
-      }
-      // Set token tax information
-      if (data?.tokenMetadata) {
-        setBuyTokenTax(data.tokenMetadata.buyToken);
-        setSellTokenTax(data.tokenMetadata.sellToken);
+        const data = await response.json();
+        console.log('Price response:', data);
+
+        if (data?.validationErrors?.length > 0) {
+          setError(data.validationErrors);
+          setPrice(undefined);
+        } else {
+          setError([]);
+          if (data.buyAmount && parsedSellAmount) {
+            setBuyAmount(formatUnits(data.buyAmount, buyTokenDecimals));
+            const priceData = {
+              ...data,
+              sellToken: sellTokenObject.address,
+              buyToken: buyTokenObject.address,
+              sellAmount: parsedSellAmount,
+              buyAmount: data.buyAmount,
+              price: data.price,
+              guaranteedPrice: data.guaranteedPrice,
+              to: data.to,
+              data: data.data,
+              value: data.value,
+            };
+            console.log('Setting price data:', priceData);
+            setPrice(priceData);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching price:', err);
+        setError([{ reason: 'Failed to fetch price' }]);
+        setPrice(undefined);
       }
     }
 
-    if (sellAmount !== "") {
-      main();
-    }
+    main();
   }, [
     sellTokenObject.address,
     buyTokenObject.address,
     parsedSellAmount,
-    parsedBuyAmount,
     chainId,
     sellAmount,
     setPrice,
-    FEE_RECIPIENT,
-    AFFILIATE_FEE,
+    buyTokenDecimals,
+    taker,
   ]);
 
   // Hook for fetching balance information for specified token for a specific taker address
@@ -175,6 +200,20 @@ export default function PriceView({
 
   // Helper function to format tax basis points to percentage
   const formatTax = (taxBps: string) => (parseFloat(taxBps) / 100).toFixed(2);
+
+  // Add button click handler
+  const handleReviewTrade = () => {
+    console.log('Current price state:', price);
+    console.log('Current sell amount:', sellAmount);
+    console.log('Current parsed sell amount:', parsedSellAmount);
+    if (!price?.sellAmount) {
+      console.error('Missing sellAmount in price data');
+      return;
+    }
+    if (price && sellAmount && taker && !error.length) {
+      setFinalize(true);
+    }
+  };
 
   return (
     <div className="bg-[#191919] rounded-[20px] p-5">
@@ -275,17 +314,16 @@ export default function PriceView({
 
         {/* Affiliate Fee Display */}
         <div className="text-slate-400">
-          {price?.fees?.integratorFee?.amount
-            ? "Affiliate Fee: " +
-              Number(
+          {price?.fees?.integratorFee?.amount && MAINNET_TOKENS_BY_SYMBOL[buyToken] && (
+            <span>
+              Affiliate Fee: {Number(
                 formatUnits(
                   BigInt(price.fees.integratorFee.amount),
-                  MAINNET_TOKENS_BY_SYMBOL[buyToken].decimals
+                  MAINNET_TOKENS_BY_SYMBOL[buyToken]?.decimals || 18
                 )
-              ) +
-              " " +
-              MAINNET_TOKENS_BY_SYMBOL[buyToken].symbol
-            : null}
+              )} {MAINNET_TOKENS_BY_SYMBOL[buyToken]?.symbol}
+            </span>
+          )}
         </div>
 
         {/* Tax Information Display */}
@@ -307,10 +345,16 @@ export default function PriceView({
         {/* Action Button */}
         <button
           className="w-full bg-[#10F0A3] hover:bg-[#10F0A3]/90 text-black font-semibold h-[56px] rounded-2xl mt-2"
-          onClick={() => setFinalize(true)}
-          disabled={!price || error.length > 0}
+          onClick={handleReviewTrade}
+          disabled={!price || !taker || error.length > 0 || !sellAmount || sellAmount === "0"}
         >
-          {error.length > 0 ? error[0].reason : "Review Trade"}
+          {!taker 
+            ? "Connect Wallet"
+            : error.length > 0 
+              ? error[0].reason 
+              : !sellAmount || sellAmount === "0"
+                ? "Enter an amount"
+                : "Review Trade"}
         </button>
       </div>
     </div>

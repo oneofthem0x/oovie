@@ -1,23 +1,37 @@
 import { type NextRequest } from "next/server";
+import qs from "qs";
 
-export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const params = Object.fromEntries(searchParams.entries());
 
-  const res = await fetch(
-    `https://api.0x.org/swap/permit2/quote?${searchParams}`,
-    {
-      headers: {
-        "0x-api-key": process.env.NEXT_PUBLIC_ZEROEX_API_KEY as string,
-        "0x-version": "v2",
-      },
+  try {
+    const response = await fetch(
+      `https://api.0x.org/swap/permit2/quote?${qs.stringify(params)}`,
+      {
+        headers: {
+          "0x-api-key": process.env.ZEROEX_API_KEY as string,
+          "0x-version": "v2"
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("0x API error:", {
+        error: errorData,
+        params,
+      });
+      return Response.json(errorData, { status: response.status });
     }
-  );
-  const data = await res.json();
 
-  console.log(
-    "quote api",
-    `https://api.0x.org/swap/permit2/quote?${searchParams}`
-  );
-
-  return Response.json(data);
+    const data = await response.json();
+    return Response.json(data);
+  } catch (error) {
+    console.error("Quote fetch error:", error);
+    return Response.json(
+      { error: "Failed to fetch quote" },
+      { status: 500 }
+    );
+  }
 }

@@ -7,19 +7,17 @@ export async function GET(request: Request) {
 
   try {
     const response = await fetch(
-      `https://api.0x.org/swap/permit2/price?${qs.stringify({
-        ...params,
-        skipValidation: false,
-        slippagePercentage: "0.01",
-        enableSlippageProtection: true,
-        buyTokenPercentageFee: "0",
-        feeRecipient: "0x0000000000000000000000000000000000000000"
+      `https://api.0x.org/swap/v1/quote?${qs.stringify({
+        // Required parameters
+        sellToken: params.sellToken,
+        buyToken: params.buyToken,
+        sellAmount: BigInt(params.sellAmount).toString(),
+        takerAddress: params.takerAddress,
       })}`,
       {
         headers: {
-          "0x-api-key": process.env.ZEROEX_API_KEY as string,
-          "0x-version": "v2",
-          "Accept": "application/json"
+          "0x-api-key": "1f0f5708-6a53-476a-a1a7-5b92e2686c41",
+          "Accept": "application/json",
         },
       }
     );
@@ -28,8 +26,13 @@ export async function GET(request: Request) {
       const errorData = await response.json();
       console.error("0x API error:", {
         error: errorData,
-        params,
-        apiKey: process.env.ZEROEX_API_KEY?.slice(0, 5) + "..."
+        params: {
+          ...params,
+          sellAmount: BigInt(params.sellAmount).toString(),
+        },
+        url: response.url,
+        status: response.status,
+        statusText: response.statusText,
       });
       return Response.json(errorData, { status: response.status });
     }
@@ -37,10 +40,10 @@ export async function GET(request: Request) {
     const data = await response.json();
     return Response.json(data);
   } catch (error) {
-    console.error("Price fetch error:", error);
+    console.error("Quote fetch error:", error);
     return Response.json(
-      { error: "Failed to fetch price" },
+      { error: "Failed to fetch quote" },
       { status: 500 }
     );
   }
-}
+} 

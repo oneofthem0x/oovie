@@ -13,8 +13,6 @@ import { Address, concat, numberToHex, size, type Hex } from "viem";
 import type { PriceResponse, QuoteResponse } from "../../src/utils/types";
 import {
   MAINNET_TOKENS_BY_ADDRESS,
-  AFFILIATE_FEE,
-  FEE_RECIPIENT,
 } from "../../src/constants";
 import Image from "next/image";
 import qs from "qs";
@@ -26,12 +24,14 @@ export default function QuoteView({
   quote,
   setQuote,
   chainId,
+  onBack,
 }: {
   taker: Address | undefined;
   price: PriceResponse;
   quote: QuoteResponse | undefined;
-  setQuote: (price: any) => void;
+  setQuote: (quote: QuoteResponse | undefined) => void;
   chainId: number;
+  onBack: () => void;
 }) {
   console.log("price", price);
 
@@ -54,20 +54,23 @@ export default function QuoteView({
 
   // Add useRouter hook at the top of the component
   const router = useRouter();
-  const [error, setError] = useState<BaseError | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch quote data
   useEffect(() => {
+    console.log('QuoteView received price:', price);
+    if (!taker || !price?.sellAmount) {
+      console.log('Missing taker or sellAmount:', { taker, sellAmount: price?.sellAmount });
+      return;
+    }
+    
     const params = {
       chainId: chainId,
       sellToken: price.sellToken,
       buyToken: price.buyToken,
       sellAmount: price.sellAmount,
       taker,
-      swapFeeRecipient: FEE_RECIPIENT,
-      swapFeeBps: AFFILIATE_FEE,
-      swapFeeToken: price.buyToken,
-      tradeSurplusRecipient: FEE_RECIPIENT,
     };
 
     async function main() {
@@ -83,8 +86,6 @@ export default function QuoteView({
     price.sellAmount,
     taker,
     setQuote,
-    FEE_RECIPIENT,
-    AFFILIATE_FEE,
   ]);
 
   const {
@@ -99,10 +100,42 @@ export default function QuoteView({
       hash,
     });
 
-  if (!quote) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-8 text-white">
-        Getting best quote...
+      <div className="bg-[#191919] rounded-[20px] p-5">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <button 
+              onClick={onBack}
+              className="text-gray-400 hover:text-white"
+            >
+              ← Back
+            </button>
+          </div>
+          <div className="flex items-center justify-center p-8 text-white">
+            Getting best quote...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-[#191919] rounded-[20px] p-5">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <button 
+              onClick={onBack}
+              className="text-gray-400 hover:text-white"
+            >
+              ← Back
+            </button>
+          </div>
+          <div className="flex items-center justify-center p-8 text-red-500">
+            Error: {error}
+          </div>
+        </div>
       </div>
     );
   }
@@ -115,6 +148,14 @@ export default function QuoteView({
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="space-y-4">
+        <div className="flex items-center mb-4">
+          <button 
+            onClick={onBack}
+            className="text-gray-400 hover:text-white flex items-center gap-2"
+          >
+            ← Back
+          </button>
+        </div>
         {/* You Pay Section */}
         <div className="bg-[#1a1a1a] rounded-2xl p-6">
           <div className="text-gray-400 text-sm mb-2">You pay</div>
@@ -128,9 +169,13 @@ export default function QuoteView({
             />
             <div className="flex flex-col">
               <span className="text-2xl font-semibold text-white">
-                {formatUnits(quote.sellAmount, sellTokenInfo(chainId).decimals)}
+                {quote?.sellAmount && sellTokenInfo(chainId)?.decimals 
+                  ? formatUnits(quote.sellAmount, sellTokenInfo(chainId).decimals)
+                  : '0'}
               </span>
-              <span className="text-gray-400">{sellTokenInfo(chainId).symbol}</span>
+              <span className="text-gray-400">
+                {sellTokenInfo(chainId)?.symbol || 'Unknown'}
+              </span>
             </div>
           </div>
         </div>
@@ -148,44 +193,14 @@ export default function QuoteView({
             />
             <div className="flex flex-col">
               <span className="text-2xl font-semibold text-white">
-                {formatUnits(quote.buyAmount, buyTokenInfo(chainId).decimals)}
+                {quote?.buyAmount && buyTokenInfo(chainId)?.decimals
+                  ? formatUnits(quote.buyAmount, buyTokenInfo(chainId).decimals)
+                  : '0'}
               </span>
-              <span className="text-gray-400">{buyTokenInfo(chainId).symbol}</span>
+              <span className="text-gray-400">
+                {buyTokenInfo(chainId)?.symbol || 'Unknown'}
+              </span>
             </div>
-          </div>
-        </div>
-
-        {/* Fee Information */}
-        <div className="bg-[#1a1a1a] rounded-2xl p-4">
-          <div className="space-y-2 text-sm">
-            {quote.fees?.integratorFee?.amount && (
-              <div className="flex justify-between text-gray-400">
-                <span>Affiliate Fee</span>
-                <span>
-                  {Number(
-                    formatUnits(
-                      BigInt(quote.fees.integratorFee.amount),
-                      buyTokenInfo(chainId).decimals
-                    )
-                  )}{" "}
-                  {buyTokenInfo(chainId).symbol}
-                </span>
-              </div>
-            )}
-            {quote.tokenMetadata.buyToken.buyTaxBps &&
-              quote.tokenMetadata.buyToken.buyTaxBps !== "0" && (
-                <div className="flex justify-between text-gray-400">
-                  <span>{buyTokenInfo(chainId).symbol} Buy Tax</span>
-                  <span>{(parseFloat(quote.tokenMetadata.buyToken.buyTaxBps) / 100).toFixed(2)}%</span>
-                </div>
-            )}
-            {quote.tokenMetadata.sellToken.sellTaxBps &&
-              quote.tokenMetadata.sellToken.sellTaxBps !== "0" && (
-                <div className="flex justify-between text-gray-400">
-                  <span>{sellTokenInfo(chainId).symbol} Sell Tax</span>
-                  <span>{(parseFloat(quote.tokenMetadata.sellToken.sellTaxBps) / 100).toFixed(2)}%</span>
-                </div>
-            )}
           </div>
         </div>
 
@@ -262,7 +277,7 @@ export default function QuoteView({
                 router.refresh();
               }
               
-              setError(err as BaseError);
+              setError(err instanceof Error ? err.message : "Failed to place order");
             }
           }}
         >
@@ -289,7 +304,7 @@ export default function QuoteView({
           )}
           {error && (
             <div className="text-red-500">
-              Error: {error.shortMessage || error.message}
+              Error: {error}
             </div>
           )}
         </div>

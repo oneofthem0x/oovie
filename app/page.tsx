@@ -4,7 +4,7 @@ import PriceView from "./components/price";
 import QuoteView from "./components/quote";
 import { useState } from "react";
 import { useAccount, useChainId } from "wagmi";
-import type { PriceResponse } from "../src/utils/types";
+import type { PriceResponse, QuoteResponse } from "../src/utils/types";
 import { Address } from "viem";
 import ConnectWithUs from "./components/connect-with-us";
 
@@ -13,7 +13,7 @@ function Page() {
   const chainId = useChainId() || 1;
   const [finalize, setFinalize] = useState(false);
   const [price, setPrice] = useState<PriceResponse | undefined>();
-  const [quote, setQuote] = useState();
+  const [quote, setQuote] = useState<QuoteResponse | undefined>();
 
   return (
     <main className="min-h-screen bg-black/10 text-white relative overflow-hidden">
@@ -33,6 +33,10 @@ function Page() {
               quote={quote}
               setQuote={setQuote}
               chainId={chainId}
+              onBack={() => {
+                setFinalize(false);
+                setQuote(undefined);
+              }}
             />
           ) : (
             <PriceView
